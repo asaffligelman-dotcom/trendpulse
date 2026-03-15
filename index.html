@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendPulse â Daily Social Media Trends</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<style>
+/* ===== DESIGN SYSTEM ===== */
+:root {
+  --bg-body: #09090b;
+  --bg-surface: #18181b;
+  --bg-card: #1e1e23;
+  --bg-elevated: #27272a;
+  --bg-hover: #2e2e33;
+  --bg-active: #3f3f46;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --ring: rgba(99,102,241,0.4);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px rgba(99,102,241,0.15);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Platform colors */
+  --c-facebook: #1877f2;
+  --c-instagram: #e4405f;
+  --c-tiktok: #25f4ee;
+  --c-twitter: #1d9bf0;
+  --c-linkedin: #0a66c2;
+  --c-youtube: #ff0000;
+
+  /* Category colors */
+  --c-finance: #10b981;
+  --c-health: #f472b6;
+  --c-culture: #a78bfa;
+  --c-politics: #fb923c;
+  --c-music: #f87171;
+  --c-all: #818cf8;
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-active); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== HEADER ===== */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(9,9,11,0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+}
+
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  gap: 24px;
+}
+
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; flex-shrink: 0;
+}
+
+.brand-mark {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-mark::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2));
+}
+
+.brand-mark svg { width: 18px; height: 18px; position: relative; z-index: 1; }
+
+.brand-text {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #e0e7ff, #818cf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Date Navigation */
+.date-nav {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.date-btn {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: none; border-radius: 7px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.date-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.date-btn svg { width: 16px; height: 16px; }
+
+.date-label {
+  padding: 0 12px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+}
+
+.date-label input {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+
+/* Search */
+.search-box {
+  position: relative;
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.search-box input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px 0 36px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: var(--transition);
+}
+
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box input:focus { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 0 3px var(--ring); }
+
+.search-box svg {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  width: 15px; height: 15px; color: var(--text-muted); pointer-events: none;
+}
+
+/* ===== MAIN ===== */
+.main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 32px 60px;
+}
+
+/* ===== KPI ROW ===== */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.kpi-card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+.kpi-card:hover::before { opacity: 1; }
+.kpi-card.active { border-color: rgba(99,102,241,0.3); }
+.kpi-card.active::before { opacity: 1; }
+
+.kpi-card[data-cat="finance"]::before { background: var(--c-finance); }
+.kpi-card[data-cat="health"]::before { background: var(--c-health); }
+.kpi-card[data-cat="culture"]::before { background: var(--c-culture); }
+.kpi-card[data-cat="politics"]::before { background: var(--c-politics); }
+.kpi-card[data-cat="music"]::before { background: var(--c-music); }
+
+.kpi-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.kpi-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kpi-value {
+  font-size: 26px; font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.kpi-sub { font-size: 12px; color: var(--text-muted); }
+
+/* ===== CHARTS ROW ===== */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+}
+
+.chart-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.chart-wrap { position: relative; height: 160px; }
+
+/* ===== PLATFORM TABS ===== */
+.tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs-bar::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  border: none; background: transparent;
+  color: var(--text-muted);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: var(--transition);
+}
+
+.tab-btn:hover { color: var(--text-secondary); }
+
+.tab-btn.active {
+  color: var(--text-primary);
+  border-bottom-color: #818cf8;
+}
+
+.tab-icon {
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.tab-icon.facebook { background: var(--c-facebook); }
+.tab-icon.instagram { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.tab-icon.tiktok { background: #000; outline: 1px solid var(--c-tiktok); outline-offset: -1px; color: var(--c-tiktok); }
+.tab-icon.twitter { background: #000; outline: 1px solid var(--c-twitter); outline-offset: -1px; color: var(--c-twitter); }
+.tab-icon.linkedin { background: var(--c-linkedin); }
+.tab-icon.youtube { background: var(--c-youtube); }
+
+.tab-count {
+  background: var(--bg-elevated);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.tab-btn.active .tab-count { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+
+/* ===== TREND GRID ===== */
+.trend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 12px;
+  animation: fadeUp 300ms ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== TREND CARD ===== */
+.trend-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  transition: var(--transition);
+  position: relative;
+}
+
+.trend-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+}
+
+.trend-rank-badge {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 13px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.trend-rank-badge.gold {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #451a03;
+  box-shadow: 0 2px 8px rgba(251,191,36,0.3);
+}
+
+.trend-rank-badge.silver {
+  background: linear-gradient(135deg, #d4d4d8, #a1a1aa);
+  color: #27272a;
+}
+
+.trend-rank-badge.bronze {
+  background: linear-gradient(135deg, #d97706, #92400e);
+  color: #fef3c7;
+}
+
+.trend-rank-badge.other {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.trend-body { flex: 1; min-width: 0; }
+
+.trend-meta {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.trend-name {
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.cat-pill {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.cat-pill.finance { background: rgba(16,185,129,0.12); color: #34d399; }
+.cat-pill.health { background: rgba(244,114,182,0.12); color: #f9a8d4; }
+.cat-pill.culture { background: rgba(167,139,250,0.12); color: #c4b5fd; }
+.cat-pill.politics { background: rgba(251,146,60,0.12); color: #fdba74; }
+.cat-pill.music { background: rgba(248,113,113,0.12); color: #fca5a5; }
+
+.trend-platform-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.trend-synopsis {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ===== CROSS-PLATFORM VIEW ===== */
+.cross-platform-section {
+  margin-top: 8px;
+}
+
+.cross-platform-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cross-platform-title {
+  font-size: 15px; font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ===== HISTORY SECTION ===== */
+.history-section {
+  margin-top: 32px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.history-title {
+  font-size: 15px; font-weight: 600;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.history-title svg { width: 18px; height: 18px; color: var(--text-muted); }
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+}
+
+.history-btn {
+  padding: 10px 8px;
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px; font-weight: 500;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.history-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+
+.history-btn.current {
+  border-color: rgba(99,102,241,0.4);
+  color: #a5b4fc;
+  background: rgba(99,102,241,0.06);
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-state svg { width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 16px; }
+
+.empty-state h3 {
+  font-size: 16px; font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.empty-state p { font-size: 13px; color: var(--text-muted); }
+
+/* ===== FOOTER ===== */
+.footer {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 32px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+  .search-box { width: 180px; }
+}
+
+@media (max-width: 768px) {
+  .header { padding: 0 16px; }
+  .main { padding: 16px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .trend-grid { grid-template-columns: 1fr; }
+  .search-box { display: none; }
+  .header-inner { gap: 12px; }
+}
+
+@media (max-width: 480px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .date-label { font-size: 12px; padding: 0 8px; }
+}
+
+/* ===== TRANSITION STATES ===== */
+.trend-grid.loading { opacity: 0.4; pointer-events: none; }
+
+/* Print */
+@media print {
+  .header { position: static; backdrop-filter: none; }
+  .search-box, .date-nav { display: none; }
+  body { background: #fff; color: #000; }
+  .trend-card, .kpi-card, .chart-card, .history-section { border: 1px solid #ccc; background: #fff; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="#">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+      </div>
+      <span class="brand-text">TrendPulse</span>
+    </a>
+
+    <nav class="date-nav">
+      <button class="date-btn" onclick="changeDate(-1)" aria-label="Previous day">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <label class="date-label" id="dateLabel">
+        <span id="dateLabelText"></span>
+        <input type="date" id="datePicker" onchange="jumpToDate(this.value)">
+      </label>
+      <button class="date-btn" onclick="changeDate(1)" aria-label="Next day">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </nav>
+
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="searchInput" placeholder="Search trends..." oninput="handleSearch(this.value)">
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- KPI Row -->
+  <section class="kpi-row" id="kpiRow"></section>
+
+  <!-- Charts -->
+  <section class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Category Distribution</div>
+      <div class="chart-wrap"><canvas id="catChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Trends by Platform</div>
+      <div class="chart-wrap"><canvas id="platChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Platform Tabs -->
+  <nav class="tabs-bar" id="tabsBar"></nav>
+
+  <!-- Trend Grid -->
+  <section class="trend-grid" id="trendGrid"></section>
+
+  <!-- History -->
+  <section class="history-section">
+    <div class="history-header">
+      <div class="history-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Historical Archive
+      </div>
+    </div>
+    <div class="history-grid" id="historyGrid"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  TrendPulse &copy; 2026 &mdash; Auto-updated daily at 8 AM &middot; Tracking 6 platforms &middot; 5 categories
+</footer>
+
+<script>
+/* ===== DATA ===== */
+const TREND_DATA = {
+  "2026-03-13": {
+    "facebook": [
+      { "title": "Iran-US Military Escalation", "category": "politics", "synopsis": "Tensions between the US and Iran have escalated dramatically after US troops were killed in Iraq, dominating Facebook feeds with widespread debate. Users are sharing news articles and heated commentary about the potential for broader conflict in the Middle East." },
+      { "title": "Core PCE Inflation Report", "category": "finance", "synopsis": "The latest Core PCE data released today shows consumer prices continuing to rise, fueling concerns about the US economy's trajectory. Facebook finance groups are buzzing with analysis of the revised Q4 GDP growth figure of just 0.7%." },
+      { "title": "Michigan Synagogue Attack", "category": "politics", "synopsis": "The FBI is investigating a devastating attack on a Michigan synagogue that occurred yesterday, sparking massive outreach and solidarity posts across Facebook. Communities are organizing vigils and fundraising campaigns for victims and their families." },
+      { "title": "Friday the 13th Memes", "category": "culture", "synopsis": "It's Friday the 13th and also the eve of Good Friday, creating a perfect storm of superstitious and humorous content flooding Facebook feeds. Users are sharing everything from horror movie throwbacks to lucky charm recommendations." },
+      { "title": "PinkPantheress & Zara Larsson Collab", "category": "music", "synopsis": "PinkPantheress and Zara Larsson's new track 'Stateside' is going viral across Facebook with fans sharing clips and reactions. The collaboration has been praised as one of the freshest pop releases of 2026 so far." }
+    ],
+    "instagram": [
+      { "title": "Oscars Red Carpet Looks", "category": "culture", "synopsis": "Instagram is flooded with Oscars red carpet fashion content as stylists and influencers break down the best and worst looks from this year's ceremony. Carousel posts dissecting designer choices and accessory trends are dominating the Explore page." },
+      { "title": "CBK Summer Aesthetic", "category": "health", "synopsis": "The 'CBK' (Clean Beauty Kitchen) summer aesthetic trend has officially arrived on Instagram, with creators sharing their minimalist skincare routines. DIY beauty recipes using natural ingredients are getting millions of views through Reels." },
+      { "title": "Poetcore Fashion Movement", "category": "culture", "synopsis": "Poetcore is the hottest fashion trend taking over Instagram, blending literary aesthetics with modern style in what's being called the 'new granny-chic.' Celebrities and influencers are sporting vintage bookstore vibes with tweed, oversized glasses, and layered scarves." },
+      { "title": "Feet POV GRWM Trend", "category": "health", "synopsis": "A creative new 'Get Ready With Me' format shot from a feet-first perspective has become one of Instagram's biggest content trends this month. Beauty influencers are using the unique camera angle to showcase their full morning routines in an immersive way." },
+      { "title": "Harry Styles New Album Reactions", "category": "music", "synopsis": "Harry Styles' newly released album is generating an avalanche of reaction posts and fan art across Instagram. Story shares and aesthetic album review posts are among the most engaged content on the platform today." }
+    ],
+    "tiktok": [
+      { "title": "Don Toliver Dance Challenge", "category": "music", "synopsis": "Don Toliver's latest track has spawned one of TikTok's biggest dance challenges of March 2026, with millions of users creating their own versions. The choreography combines smooth footwork with dramatic arm movements that even beginners can follow." },
+      { "title": "Bachelorette Premiere Reactions", "category": "culture", "synopsis": "The new season of The Bachelorette premiered this week and TikTok is overflowing with dramatic reaction videos and contestant ranking content. Creators are posting side-by-side commentary and first impression hot takes that are racking up millions of views." },
+      { "title": "Stock Market Crash Comedy", "category": "finance", "synopsis": "With markets rattled by Iran tensions and weak GDP numbers, TikTok finance creators are producing darkly comedic content about portfolio losses. The hashtag #StockTok is trending as young investors share memes about their shrinking 401(k)s." },
+      { "title": "Postpartum Recovery Tips", "category": "health", "synopsis": "Postpartum fitness and wellness content is surging on TikTok, with physical therapists and new moms sharing evidence-based recovery exercises. The trend is part of a broader movement toward destigmatizing postpartum body changes on the platform." },
+      { "title": "Iran War Protest Content", "category": "politics", "synopsis": "Anti-war content has surged on TikTok in response to the escalating US-Iran conflict, with young users organizing digital protests and awareness campaigns. Informational videos explaining the geopolitical context are among the most-shared content today." }
+    ],
+    "twitter": [
+      { "title": "Friday the 13th + Good Friday", "category": "culture", "synopsis": "The rare overlap of Friday the 13th and Good Friday weekend has X/Twitter buzzing with superstitious jokes, religious commentary, and cultural takes. The hashtag trended #1 in the US with over 500K posts by midday." },
+      { "title": "Core PCE & GDP Revision", "category": "finance", "synopsis": "Financial X/Twitter is laser-focused on the Core PCE inflation data and the downward revision of Q4 GDP to just 0.7%. Economists and traders are debating whether the weak numbers signal a recession or create room for Fed rate cuts." },
+      { "title": "Jack Harlow New Release", "category": "music", "synopsis": "Jack Harlow is trending on X after dropping new music and teasing upcoming tour dates, generating massive fan engagement. The rapper's name has been in the top 10 trending topics throughout the day with clips going viral." },
+      { "title": "David Ellison Media Consolidation", "category": "finance", "synopsis": "David Ellison's media empire moves are generating heated discussion on X/Twitter about the future of entertainment industry consolidation. Business journalists and media critics are weighing in on the implications for content creators and consumers." },
+      { "title": "White House STRIKE Announcement", "category": "politics", "synopsis": "The White House posted a dramatic 'STRIKE' announcement related to military operations against Iran, instantly becoming one of the most engaged posts on the platform. The post generated millions of impressions and fierce debate about US foreign policy." }
+    ],
+    "linkedin": [
+      { "title": "US Economy Q4 Analysis", "category": "finance", "synopsis": "LinkedIn's professional community is deeply engaged in analyzing the revised Q4 GDP figure of 0.7% and its implications for businesses. CFOs and economists are sharing detailed breakdowns of how the economic slowdown may affect hiring and investment decisions." },
+      { "title": "AI Workplace Transformation", "category": "culture", "synopsis": "The ongoing AI revolution in workplaces continues to dominate LinkedIn discourse, with thought leaders debating the 'attention fragmentation' crisis highlighted by Jonathan Haidt. Companies are sharing their AI adoption strategies and the impact on employee productivity." },
+      { "title": "Iran Conflict Business Impact", "category": "politics", "synopsis": "Business leaders on LinkedIn are assessing the economic ramifications of the US-Iran conflict, particularly on supply chains and energy markets. Risk analysts are publishing detailed posts about how companies should prepare for potential disruptions." },
+      { "title": "Stryker Cyberattack Response", "category": "finance", "synopsis": "The Stryker cyberattack is trending among cybersecurity professionals on LinkedIn who are analyzing the incident and sharing lessons learned. IT leaders are using the event to advocate for stronger enterprise security infrastructure and incident response plans." },
+      { "title": "Wellness in the Workplace", "category": "health", "synopsis": "Corporate wellness programs are a hot topic on LinkedIn this week, with HR leaders sharing data on ROI from employee health initiatives. The conversation ties into broader trends about mental health support and work-life balance in the post-pandemic era." }
+    ],
+    "youtube": [
+      { "title": "Futures Fall: Trump-Iran Tensions", "category": "finance", "synopsis": "Benzinga's PreMarket Playbook livestream covering the market reaction to Trump-Iran tensions is one of YouTube's most-watched financial streams today. Traders and investors are tuning in live to get real-time analysis as futures markets swing dramatically." },
+      { "title": "Crimson Desert Official Launch", "category": "culture", "synopsis": "The official launch trailer for Crimson Desert has taken YouTube by storm, trending worldwide as one of the most anticipated video game releases of 2026. The open-world fantasy RPG is being hailed as a potential game-of-the-year contender based on the stunning visuals." },
+      { "title": "Iran Conflict News Coverage", "category": "politics", "synopsis": "Major news channels including WRAL and SABC are generating massive viewership with their coverage of the US-Iran military conflict. Pentagon briefings and expert analysis videos are among the most-viewed content on the platform today." },
+      { "title": "Popular Dance Trends March 2026", "category": "music", "synopsis": "Dance compilation channels are thriving with March 2026's trending choreography, featuring the latest viral moves from TikTok crossover hits. The 'One Challenge' channel's compilation has already surpassed 33K views in less than a week." },
+      { "title": "Home & Beauty Trends 2026", "category": "health", "synopsis": "Lifestyle channels are publishing their spring 2026 home and beauty trend guides, with WHNT's segment on 2026 home trends gaining traction. Content covers everything from minimalist interior design to the latest skincare innovations for the warmer months ahead." }
+    ]
+  }
+};
+
+/* ===== STATE ===== */
+let state = {
+  date: "2026-03-13",
+  platform: "all",
+  category: "all",
+  search: "",
+};
+
+/* ===== PLATFORM CONFIG ===== */
+const PLATFORMS = [
+  { id: "facebook", name: "Facebook", icon: "f", abbr: "FB" },
+  { id: "instagram", name: "Instagram", icon: "IG", abbr: "IG" },
+  { id: "tiktok", name: "TikTok", icon: "TT", abbr: "TT" },
+  { id: "twitter", name: "X / Twitter", icon: "X", abbr: "X" },
+  { id: "linkedin", name: "LinkedIn", icon: "in", abbr: "LI" },
+  { id: "youtube", name: "YouTube", icon: "YT", abbr: "YT" },
+];
+
+const CATEGORIES = [
+  { id: "finance", label: "Finance", color: "#10b981" },
+  { id: "health", label: "Health / Beauty", color: "#f472b6" },
+  { id: "culture", label: "Pop Culture", color: "#a78bfa" },
+  { id: "politics", label: "Politics", color: "#fb923c" },
+  { id: "music", label: "Music", color: "#f87171" },
+];
+
+const CAT_LABELS = { finance: "Finance", health: "Health / Beauty", culture: "Pop Culture", politics: "Politics", music: "Music" };
+
+let catChartInstance = null;
+let platChartInstance = null;
+
+/* ===== HELPERS ===== */
+function formatDateLong(ds) {
+  const d = new Date(ds + "T12:00:00");
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function getAllTrends(dateStr) {
+  const dayData = TREND_DATA[dateStr];
+  if (!dayData) return [];
+  const all = [];
+  PLATFORMS.forEach(p => {
+    (dayData[p.id] || []).forEach((t, i) => {
+      all.push({ ...t, platform: p.id, platformName: p.name, rank: i + 1 });
+    });
+  });
+  return all;
+}
+
+function getFilteredTrends() {
+  let trends = getAllTrends(state.date);
+  if (state.platform !== "all") trends = trends.filter(t => t.platform === state.platform);
+  if (state.category !== "all") trends = trends.filter(t => t.category === state.category);
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    trends = trends.filter(t => t.title.toLowerCase().includes(q) || t.synopsis.toLowerCase().includes(q));
+  }
+  return trends;
+}
+
+function getCategoryCounts(dateStr) {
+  const all = getAllTrends(dateStr);
+  const counts = {};
+  CATEGORIES.forEach(c => counts[c.id] = 0);
+  all.forEach(t => { if (counts[t.category] !== undefined) counts[t.category]++; });
+  return counts;
+}
+
+function getPlatformCounts(dateStr) {
+  const dayData = TREND_DATA[dateStr];
+  if (!dayData) return {};
+  const counts = {};
+  PLATFORMS.forEach(p => counts[p.id] = (dayData[p.id] || []).length);
+  return counts;
+}
+
+/* ===== RENDER: KPIs ===== */
+function renderKPIs() {
+  const el = document.getElementById('kpiRow');
+  const counts = getCategoryCounts(state.date);
+  el.innerHTML = CATEGORIES.map(c => `
+    <div class="kpi-card ${state.category === c.id ? 'active' : ''}" data-cat="${c.id}" onclick="toggleCategory('${c.id}')">
+      <div class="kpi-label"><span class="kpi-dot" style="background:${c.color}"></span>${c.label}</div>
+      <div class="kpi-value" style="color:${c.color}">${counts[c.id]}</div>
+      <div class="kpi-sub">trending across platforms</div>
+    </div>
+  `).join('');
+}
+
+/* ===== RENDER: CHARTS ===== */
+function renderCharts() {
+  const counts = getCategoryCounts(state.date);
+  const platCounts = getPlatformCounts(state.date);
+
+  // Category donut
+  const catCtx = document.getElementById('catChart').getContext('2d');
+  if (catChartInstance) catChartInstance.destroy();
+  catChartInstance = new Chart(catCtx, {
+    type: 'doughnut',
+    data: {
+      labels: CATEGORIES.map(c => c.label),
+      datasets: [{ data: CATEGORIES.map(c => counts[c.id]), backgroundColor: CATEGORIES.map(c => c.color + 'cc'), borderColor: 'transparent', borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'right', labels: { color: '#a1a1aa', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 12 } },
+        tooltip: { backgroundColor: '#27272a', titleColor: '#fafafa', bodyColor: '#a1a1aa', borderColor: 'rgba(255,255,255,0.06)', borderWidth: 1, cornerRadius: 8, padding: 10 }
+      }
+    }
+  });
+
+  // Platform bar
+  const platCtx = document.getElementById('platChart').getContext('2d');
+  if (platChartInstance) platChartInstance.destroy();
+  const platColors = ['#1877f2cc','#e4405fcc','#25f4eecc','#1d9bf0cc','#0a66c2cc','#ff0000cc'];
+  platChartInstance = new Chart(platCtx, {
+    type: 'bar',
+    data: {
+      labels: PLATFORMS.map(p => p.abbr),
+      datasets: [{ data: PLATFORMS.map(p => platCounts[p.id] || 0), backgroundColor: platColors, borderRadius: 6, borderSkipped: false, barThickness: 28 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#27272a', titleColor: '#fafafa', bodyColor: '#a1a1aa', borderColor: 'rgba(255,255,255,0.06)', borderWidth: 1, cornerRadius: 8, padding: 10,
+          callbacks: { title: ctx => PLATFORMS[ctx[0].dataIndex].name, label: ctx => `${ctx.parsed.y} trends` }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#71717a', font: { size: 11, weight: '600' } }, border: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#71717a', font: { size: 11 }, stepSize: 1 }, border: { display: false }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+/* ===== RENDER: TABS ===== */
+function renderTabs() {
+  const el = document.getElementById('tabsBar');
+  const platCounts = getPlatformCounts(state.date);
+  const total = Object.values(platCounts).reduce((a, b) => a + b, 0);
+
+  let html = `<button class="tab-btn ${state.platform === 'all' ? 'active' : ''}" onclick="setPlatform('all')">
+    <span>All</span><span class="tab-count">${total}</span>
+  </button>`;
+
+  PLATFORMS.forEach(p => {
+    html += `<button class="tab-btn ${state.platform === p.id ? 'active' : ''}" onclick="setPlatform('${p.id}')">
+      <span class="tab-icon ${p.id}">${p.icon}</span>
+      <span>${p.name}</span>
+      <span class="tab-count">${platCounts[p.id] || 0}</span>
+    </button>`;
+  });
+
+  el.innerHTML = html;
+}
+
+/* ===== RENDER: TREND CARDS ===== */
+function renderTrends() {
+  const grid = document.getElementById('trendGrid');
+  const trends = getFilteredTrends();
+
+  if (trends.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><path d="M8 15s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+      <h3>No trends found</h3>
+      <p>${state.search ? 'Try a different search term' : 'No data available for this date yet'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = trends.map(t => {
+    const rankClass = t.rank === 1 ? 'gold' : t.rank === 2 ? 'silver' : t.rank === 3 ? 'bronze' : 'other';
+    const showPlatform = state.platform === 'all';
+    return `<article class="trend-card">
+      <div class="trend-rank-badge ${rankClass}">${t.rank}</div>
+      <div class="trend-body">
+        <div class="trend-meta">
+          <span class="trend-name">${highlight(t.title)}</span>
+          <span class="cat-pill ${t.category}">${CAT_LABELS[t.category]}</span>
+          ${showPlatform ? `<span class="trend-platform-badge">${t.platformName}</span>` : ''}
+        </div>
+        <p class="trend-synopsis">${highlight(t.synopsis)}</p>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function highlight(text) {
+  if (!state.search) return text;
+  const regex = new RegExp(`(${state.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<mark style="background:rgba(129,140,248,0.25);color:#e0e7ff;border-radius:2px;padding:0 2px">$1</mark>');
+}
+
+/* ===== RENDER: HISTORY ===== */
+function renderHistory() {
+  const grid = document.getElementById('historyGrid');
+  const dates = Object.keys(TREND_DATA).sort().reverse();
+
+  if (dates.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:24px;font-size:13px;">No historical data yet. Data accumulates day by day.</div>';
+    return;
+  }
+
+  grid.innerHTML = dates.map(d => `
+    <button class="history-btn ${d === state.date ? 'current' : ''}" onclick="jumpToDate('${d}')">
+      ${new Date(d + "T12:00:00").toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+    </button>
+  `).join('');
+}
+
+/* ===== ACTIONS ===== */
+function setPlatform(p) { state.platform = p; renderTabs(); renderTrends(); }
+
+function toggleCategory(c) {
+  state.category = state.category === c ? "all" : c;
+  renderKPIs(); renderTrends();
+}
+
+function changeDate(delta) {
+  const d = new Date(state.date + "T12:00:00");
+  d.setDate(d.getDate() + delta);
+  state.date = d.toISOString().split('T')[0];
+  state.search = '';
+  document.getElementById('searchInput').value = '';
+  render();
+}
+
+function jumpToDate(val) {
+  if (!val) return;
+  state.date = val;
+  state.search = '';
+  document.getElementById('searchInput').value = '';
+  render();
+}
+
+function handleSearch(val) {
+  state.search = val.trim();
+  renderTrends();
+}
+
+/* ===== FULL RENDER ===== */
+function render() {
+  document.getElementById('dateLabelText').textContent = formatDateLong(state.date);
+  document.getElementById('datePicker').value = state.date;
+  renderKPIs();
+  renderCharts();
+  renderTabs();
+  renderTrends();
+  renderHistory();
+}
+
+/* ===== KEYBOARD NAV ===== */
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft') changeDate(-1);
+  if (e.key === 'ArrowRight') changeDate(1);
+  if (e.key === '/' && !e.metaKey && !e.ctrlKey) {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+  if (e.key === 'Escape') {
+    document.getElementById('searchInput').blur();
+    state.search = '';
+    document.getElementById('searchInput').value = '';
+    renderTrends();
+  }
+});
+
+/* ===== INIT ===== */
+render();
+</script>
+</body>
+</html>
